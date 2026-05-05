@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -74,4 +75,82 @@
         initLIFF();
     </script>
 </body>
+=======
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThicTech Baraboom - Admin</title>
+    <!-- นำเข้า LIFF SDK -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { font-family: 'Helvetica', sans-serif; padding: 20px; background-color: #f9f9f9; color: #333; }
+        .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h2 { color: #00b900; text-align: center; margin-bottom: 25px; }
+        label { display: block; margin-top: 15px; font-weight: bold; }
+        input, select { width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
+        button { background-color: #00b900; color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-size: 18px; font-weight: bold; margin-top: 30px; cursor: pointer; transition: 0.3s; }
+        button:hover { background-color: #009900; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🛠 จัดการสินค้า VECO</h2>
+        
+        <label>📦 ชื่อสินค้า</label>
+        <input type="text" id="itemName" placeholder="เช่น มะม่วง, พลาสติกใส">
+        
+        <label>💰 ราคารับซื้อ (บาท)</label>
+        <input type="number" id="itemPrice" placeholder="ระบุราคา">
+        
+        <label>🚦 สถานะการรับซื้อ</label>
+        <select id="shopStatus">
+            <option value="เปิดรับซื้อ">✅ เปิดรับซื้อ</option>
+            <option value="ปิดรับซื้อ">❌ ปิดรับซื้อ</option>
+        </select>
+        
+        <button onclick="saveData()">บันทึกและส่งข้อมูล</button>
+    </div>
+
+    <script>
+        // 1. เริ่มต้นเชื่อมต่อกับ LINE (ใส่ LIFF ID ที่ได้จากภาพ image_36.png)
+        async function initLIFF() {
+            try {
+                await liff.init({ liffId: "ใส่_LIFF_ID_ของคุณที่นี่" });
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                }
+            } catch (error) {
+                console.error("LIFF Init Error:", error);
+            }
+        }
+
+        // 2. ฟังก์ชันส่งข้อมูลกลับไปที่แชทเพื่อให้ n8n ทำงานต่อ
+        async function saveData() {
+            const name = document.getElementById('itemName').value;
+            const price = document.getElementById('itemPrice').value;
+            const status = document.getElementById('shopStatus').value;
+
+            if (!name || !price) {
+                alert("กรุณากรอกข้อมูลให้ครบถ้วนครับ");
+                return;
+            }
+
+            try {
+                // ส่งข้อความแบบพิเศษเพื่อให้ Node Switch ใน n8n (image_33.png) ตรวจจับได้
+                await liff.sendMessages([{
+                    'type': 'text',
+                    'text': [ADMIN_UPDATE]|${name}|${price}|${status}
+                }]);
+                liff.closeWindow(); // ส่งเสร็จแล้วปิดหน้าจอทันที
+            } catch (error) {
+                alert("เกิดข้อผิดพลาด: " + error.message);
+            }
+        }
+
+        initLIFF();
+    </script>
+</body>
+>>>>>>> 3490beaa6a912cd46a9df23fa1813217077767fb
 </html>
