@@ -5,6 +5,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Veco Store</title>
+  
+  <!-- 1. นำเข้า LIFF SDK -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500&display=swap');
 
@@ -15,12 +19,11 @@
       background-color: #f5f5f5;
     }
 
-    /* ส่วนหัว: ใช้รูป image_4.png เป็นพื้นหลังทั้งหมด */
     .header-image {
       width: 100%;
       height: auto;
-      aspect-ratio: 1000 / 334; /* สัดส่วนตามรูปภาพของคุณ */
-      background-image: url(https://lh3.googleusercontent.com/d/1g7peh4Iz0oTxrNKEzmxOgHo1RY4WoaJ2); /* ใส่ Link รูปภาพ image_4.png ที่นี่ */
+      aspect-ratio: 1000 / 334;
+      background-image: url(https://lh3.googleusercontent.com/d/1g7peh4Iz0oTxrNKEzmxOgHo1RY4WoaJ2); 
       background-size: contain;
       background-repeat: no-repeat;
       background-position: top center;
@@ -28,7 +31,7 @@
 
     .container {
       max-width: 400px;
-      margin: -40px auto 40px; /* ขยับขึ้นไปเกยทับรูปแบนเนอร์เล็กน้อย */
+      margin: -40px auto 40px;
       padding: 25px;
       background-color: white;
       border-radius: 30px;
@@ -44,6 +47,22 @@
       font-size: 32px;
       margin-bottom: 20px;
       font-weight: 500;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+        font-size: 14px;
+        color: #666;
+    }
+
+    .user-info img {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        margin-right: 10px;
     }
 
     .input-group {
@@ -94,13 +113,17 @@
 </head>
 <body>
 
-  <!-- ส่วนรูปแบนเนอร์ -->
   <div class="header-image"></div>
 
-  <!-- ส่วนฟอร์มกรอกข้อมูล -->
   <div class="container">
     <div class="shop-title">Veco Store</div>
     
+    <!-- ส่วนแสดงข้อมูลผู้ใช้จาก LINE -->
+    <div id="user-info" class="user-info" style="display:none;">
+        <img id="user-profile" src="" alt="Profile">
+        <span id="user-name">กำลังโหลดข้อมูล...</span>
+    </div>
+
     <div class="input-group">
       <input type="text" id="shopLocate" placeholder="ใส่ลิ้งที่อยู่">
     </div>
@@ -126,15 +149,40 @@
   </div>
 
   <script>
-    function submitData() {
-      const scriptUrl = "https://script.google.com/macros/s/AKfycbyUsOBhMk9Abxc-sQ76fAgrqBUz-ru7hV_GXQiX1ms_LSa27GvzNfkgygGo43vcnYV9TQ/exec"; // ใส่ URL ของคุณที่นี่
-      
+    // 2. ตั้งค่า LIFF ID ของคุณ
+    const MY_LIFF_ID = "2009975524-xymUHzaC"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyUsOBhMk9Abxc-sQ76fAgrqBUz-ru7hV_GXQiX1ms_LSa27GvzNfkgygGo43vcnYV9TQ/exec";
+
+    // ฟังก์ชันเริ่มต้น LIFF
+    async function initLiff() {
+        try {
+            await liff.init({ liffId: MY_LIFF_ID });
+            if (!liff.isLoggedIn()) {
+                liff.login();
+            } else {
+                const profile = await liff.getProfile();
+                document.getElementById("user-info").style.display = "flex";
+                document.getElementById("user-name").innerText = profile.displayName;
+                document.getElementById("user-profile").src = profile.pictureUrl;
+            }
+        } catch (error) {
+            console.error("LIFF Initialization failed", error);
+        }
+    }
+
+    // เรียกใช้งาน LIFF ทันทีที่โหลดหน้าเว็บ
+    initLiff();
+
+    async function submitData() {
       const btn = document.querySelector('.btn-submit');
+      const profile = await liff.getProfile(); // ดึงชื่อโปรไฟล์เพื่อความถูกต้อง
+      
       btn.innerText = "กำลังบันทึก...";
       btn.disabled = true;
 
       const data = {
-        shopName: document.getElementById('shopLocate').value, // ใช้ช่องที่อยู่เป็น shopName ตามโครงสร้างเดิม
+        shopName: profile.displayName, // ใช้ชื่อจาก LINE อัตโนมัติ หรือจะใช้ช่องกรอกเดิมก็ได้
+        shopLocate: document.getElementById('shopLocate').value,
         itemName: document.getElementById('itemName').value,
         price1: document.getElementById('price1').value,
         price2: document.getElementById('price2').value,
@@ -143,7 +191,7 @@
         action: "insert"
       };
 
-      fetch(scriptUrl, {
+      fetch(SCRIPT_URL, {
         method: 'POST',
         body: JSON.stringify(data)
       })
@@ -151,6 +199,7 @@
       .then(result => {
         alert("บันทึกสำเร็จ!");
         document.querySelectorAll('input').forEach(i => i.value = '');
+        liff.closeWindow(); // ปรับแต่ง: ปิดหน้าต่าง LIFF หลังบันทึกสำเร็จ
       })
       .catch(err => alert("เกิดข้อผิดพลาด"))
       .finally(() => {
