@@ -5,24 +5,143 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Veco Store - Admin</title>
+  
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500&display=swap');
-    body { font-family: 'Kanit', sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }
-    .header-image { width: 100%; height: auto; aspect-ratio: 1000 / 334; background-image: url(https://lh3.googleusercontent.com/d/1g7peh4Iz0oTxrNKEzmxOgHo1RY4WoaJ2); background-size: contain; background-repeat: no-repeat; background-position: top center; }
-    .container { max-width: 450px; margin: -40px auto 40px; padding: 25px; background-color: white; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; z-index: 10; width: 85%; }
-    .shop-title { text-align: center; color: #88d462; font-size: 32px; margin-bottom: 10px; font-weight: 500; }
-    .user-info { display: flex; align-items: center; justify-content: center; margin-bottom: 20px; background: #e8f5e9; padding: 10px; border-radius: 15px; }
-    .user-info img { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; }
-    .input-group { margin-bottom: 10px; }
-    input { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 12px; font-size: 16px; box-sizing: border-box; outline: none; font-family: 'Kanit', sans-serif; }
-    input:focus { border-color: #88d462; }
-    /* เน้นช่องที่อยู่ให้รู้ว่ามีการจำค่า */
-    #shopLocate { background-color: #fffdf0; border-color: #ffeaa7; }
-    .btn-submit { background-color: #88d462; color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
-    .product-list-section { margin-top: 30px; }
-    .product-card { background: #f9f9f9; padding: 15px; margin-top: 10px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
-    .btn-del { background: #e74c3c; color: white; padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer; font-size: 12px; }
+
+    body {
+      font-family: 'Kanit', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+
+    /* ส่วนหัวแบนเนอร์ */
+    .header-image {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1000 / 334;
+      background-image: url(https://lh3.googleusercontent.com/d/1g7peh4Iz0oTxrNKEzmxOgHo1RY4WoaJ2); /* เปลี่ยนเป็น Link รูปของคุณ */
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: top center;
+    }
+
+    .container {
+      max-width: 450px;
+      margin: -40px auto 40px;
+      padding: 25px;
+      background-color: white;
+      border-radius: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      position: relative;
+      z-index: 10;
+      width: 85%;
+    }
+
+    .shop-title {
+      text-align: center;
+      color: #88d462;
+      font-size: 32px;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      background: #e8f5e9;
+      padding: 10px;
+      border-radius: 15px;
+    }
+    .user-info img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    .input-group {
+      margin-bottom: 10px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      font-size: 16px;
+      box-sizing: border-box;
+      outline: none;
+      font-family: 'Kanit', sans-serif;
+    }
+
+    input:focus {
+      border-color: #88d462;
+    }
+
+    /* เน้นช่องที่อยู่ให้ต่างจากช่องอื่น */
+    #shopLocate {
+      background-color: #fffef0;
+      border: 1px solid #ffeaa7;
+    }
+
+    .btn-submit {
+      background-color: #88d462;
+      color: white;
+      border: none;
+      width: 100%;
+      padding: 15px;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: 0.3s;
+    }
+
+    .btn-submit:hover {
+      background-color: #76c051;
+    }
+
+    /* ส่วนรายการสินค้าด้านล่าง */
+    .product-list-section {
+      margin-top: 30px;
+    }
+
+    .product-card {
+      background: #f9f9f9;
+      padding: 15px;
+      margin-top: 10px;
+      border-radius: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid #eee;
+    }
+
+    .product-info b {
+      color: #333;
+      font-size: 16px;
+    }
+
+    .product-info small {
+      color: #777;
+    }
+
+    .btn-del {
+      background: #e74c3c;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+    }
   </style>
 </head>
 <body>
@@ -39,14 +158,25 @@
 
     <div class="input-section">
       <div class="input-group">
-        <input type="text" id="shopLocate" placeholder="ใส่ลิ้งที่อยู่ (ระบบจะจำค่านี้ไว้)" oninput="saveLocate()">
+        <input type="text" id="shopLocate" placeholder="ใส่ลิ้งที่อยู่" oninput="saveLocate()">
       </div>
-      <div class="input-group"><input type="text" id="itemName" placeholder="ชื่อสินค้า"></div>
-      <div class="input-group"><input type="number" id="p1" placeholder="ราคาคุณภาพสวย"></div>
-      <div class="input-group"><input type="number" id="p2" placeholder="ราคาคุณภาพมีตำหนิเล็กน้อย"></div>
-      <div class="input-group"><input type="number" id="p3" placeholder="ราคาคุณภาพมีตำหนิมากกินได้"></div>
-      <div class="input-group"><input type="number" id="p4" placeholder="ราคาคุณภาพรับประทานไม่ได้"></div>
-      <button class="btn-submit" onclick="sendData('insert')">➕ เพิ่มสินค้าใหม่</button>
+      <div class="input-group">
+        <input type="text" id="itemName" placeholder="ชื่อสินค้า">
+      </div>
+      <div class="input-group">
+        <input type="number" id="p1" placeholder="ราคาคุณภาพสวย">
+      </div>
+      <div class="input-group">
+        <input type="number" id="p2" placeholder="ราคาคุณภาพมีตำหนิเล็กน้อย">
+      </div>
+      <div class="input-group">
+        <input type="number" id="p3" placeholder="ราคาคุณภาพมีตำหนิมากกินได้">
+      </div>
+      <div class="input-group">
+        <input type="number" id="p4" placeholder="ราคาคุณภาพรับประทานไม่ได้">
+      </div>
+
+      <button class="btn-submit" id="mainBtn" onclick="sendData('insert')">➕ เพิ่มสินค้าใหม่</button>
     </div>
 
     <div class="product-list-section">
@@ -58,25 +188,26 @@
   </div>
 
   <script>
+    // --- ตั้งค่าข้อมูล ---
     const MY_LIFF_ID = "2009975524-xymUHzaC"; 
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyUsOBhMk9Abxc-sQ76fAgrqBUz-ru7hV_GXQiX1ms_LSa27GvzNfkgygGo43vcnYV9TQ/exec"; 
 
     let userDisplayName = "";
 
-    // ฟังก์ชันเซฟที่อยู่ลงเครื่อง
+    // 1. ระบบจำค่าที่อยู่ (LocalStorage)
     function saveLocate() {
-        const locateValue = document.getElementById("shopLocate").value;
-        localStorage.setItem("saved_locate", locateValue);
+        const val = document.getElementById("shopLocate").value;
+        localStorage.setItem("veco_saved_locate", val);
     }
 
-    // ฟังก์ชันโหลดที่อยู่ที่เคยเซฟไว้
     function loadSavedLocate() {
-        const savedValue = localStorage.getItem("saved_locate");
-        if (savedValue) {
-            document.getElementById("shopLocate").value = savedValue;
+        const saved = localStorage.getItem("veco_saved_locate");
+        if (saved) {
+            document.getElementById("shopLocate").value = saved;
         }
     }
 
+    // 2. เริ่มต้นระบบ LIFF
     async function initLiff() {
         try {
             await liff.init({ liffId: MY_LIFF_ID });
@@ -85,43 +216,58 @@
             } else {
                 const profile = await liff.getProfile();
                 userDisplayName = profile.displayName;
+                
+                // แสดงข้อมูลโปรไฟล์
                 document.getElementById("user-display").style.display = "flex";
                 document.getElementById("user-name").innerText = userDisplayName;
                 document.getElementById("user-img").src = profile.pictureUrl;
                 
-                loadSavedLocate(); // โหลดที่อยู่ที่จำไว้เมื่อเปิดแอป
-                loadProducts(); 
+                loadSavedLocate(); // โหลดที่อยู่ที่เคยเซฟไว้
+                loadProducts();    // โหลดรายการสินค้าจาก Sheet
             }
-        } catch (error) { console.error(error); }
+        } catch (error) {
+            console.error("LIFF Error:", error);
+        }
     }
 
+    // 3. โหลดรายการสินค้าจาก Google Sheets
     async function loadProducts() {
         const listDiv = document.getElementById("product-list");
         try {
             const response = await fetch(`${SCRIPT_URL}?shopName=${encodeURIComponent(userDisplayName)}`);
             const products = await response.json();
+            
             let html = "";
             if (!products || products.length === 0) {
-                html = "<p style='text-align:center;'>ยังไม่มีรายการ</p>";
+                html = "<p style='text-align:center; color:#999;'>ยังไม่มีรายการสินค้า</p>";
             } else {
                 products.forEach(row => {
                     html += `
                         <div class="product-card">
-                            <div>
-                                <strong>${row[1]}</strong><br>
-                                <small>สวย: ${row[2]} | ตำหนิ: ${row[3]}</small>
+                            <div class="product-info">
+                                <b>${row[1]}</b><br>
+                                <small>สวย: ${row[2]} | มีตำหนิ: ${row[3]}</small>
                             </div>
                             <button class="btn-del" onclick="confirmDelete('${row[1]}')">ลบ</button>
                         </div>`;
                 });
             }
             listDiv.innerHTML = html;
-        } catch (e) { listDiv.innerHTML = "<p>โหลดข้อมูลไม่สำเร็จ</p>"; }
+        } catch (e) {
+            listDiv.innerHTML = "<p style='text-align:center;'>ไม่สามารถโหลดข้อมูลได้</p>";
+        }
     }
 
+    // 4. ส่งข้อมูลไปยัง Google Sheets (ทั้งเพิ่มและลบ)
     async function sendData(actionType, targetItem = null) {
         const itemName = targetItem || document.getElementById("itemName").value;
-        if (!itemName) return alert("ระบุชื่อสินค้า");
+        if (!itemName) return alert("กรุณาระบุชื่อสินค้า");
+
+        const btn = document.getElementById("mainBtn");
+        if (actionType === 'insert') {
+            btn.innerText = "กำลังบันทึก...";
+            btn.disabled = true;
+        }
 
         const data = {
             action: actionType,
@@ -135,25 +281,41 @@
         };
 
         try {
-            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(data) });
-            alert("สำเร็จ!");
-            if(actionType === 'insert') {
-                // ล้างแค่ช่องสินค้าและราคา แต่ **ไม่ล้างช่องที่อยู่**
+            await fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify(data)
+            });
+            
+            alert("ดำเนินการสำเร็จ!");
+            
+            if (actionType === 'insert') {
+                // ล้างข้อมูลช่องกรอก ยกเว้นช่องที่อยู่
                 document.getElementById("itemName").value = "";
                 document.getElementById("p1").value = "";
                 document.getElementById("p2").value = "";
                 document.getElementById("p3").value = "";
                 document.getElementById("p4").value = "";
             }
+            loadProducts(); // อัปเดตรายการใหม่
+        } catch (e) {
+            // กรณีติด CORS แต่ข้อมูลเข้าปกติ
             loadProducts();
-        } catch (e) { alert("บันทึกข้อมูลเรียบร้อย"); loadProducts(); }
+        } finally {
+            btn.innerText = "➕ เพิ่มสินค้าใหม่";
+            btn.disabled = false;
+        }
     }
 
+    // 5. ยืนยันการลบ
     function confirmDelete(name) {
-        if(confirm(`ลบ "${name}"?`)) sendData('delete', name);
+        if (confirm(`คุณต้องการลบรายการ "${name}" ใช่หรือไม่?`)) {
+            sendData('delete', name);
+        }
     }
 
+    // รัน LIFF ทันทีที่เปิดหน้าเว็บ
     initLiff();
+    
   </script>
 </body>
 </html>
