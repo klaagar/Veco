@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Veco Store - Admin</title>
+    <!-- เชื่อมต่อ LINE LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
@@ -17,75 +18,76 @@
             margin-top: -15px; position: relative; z-index: 10; text-align: center; 
         }
         
-        /* ส่วนแสดงโปรไฟล์ LINE */
+        /* ส่วนแสดงโปรไฟล์แอดมินที่ดึงจาก LINE */
         .profile-area { display: none; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-        #profile-pic { width: 65px; height: 65px; border-radius: 50%; border: 3px solid #8fd462; object-fit: cover; }
-        #profile-name { margin: 8px 0 0; font-weight: 500; color: #333; }
+        #profile-pic { width: 70px; height: 70px; border-radius: 50%; border: 3px solid #8fd462; object-fit: cover; }
+        #profile-name { margin: 8px 0 0; font-weight: 500; color: #333; font-size: 18px; }
 
         h1 { color: #8fd462; font-size: 26px; margin: 0 0 20px 0; }
         input { width: 100%; padding: 12px 15px; margin-bottom: 10px; border: 1.5px solid #ccc; border-radius: 12px; box-sizing: border-box; font-size: 16px; font-family: 'Kanit', sans-serif; outline: none; transition: 0.2s; }
         input:focus { border-color: #8fd462; }
         
-        .btn-add { width: 100%; padding: 15px; background-color: #8fd462; color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: 500; cursor: pointer; margin-top: 5px; }
+        .btn-add { width: 100%; padding: 15px; background-color: #8fd462; color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: 500; cursor: pointer; margin-top: 5px; transition: 0.2s; }
         .btn-add:active { transform: scale(0.98); background-color: #76b151; }
+        .btn-add:disabled { background-color: #ccc; cursor: not-allowed; }
         
-        h3 { text-align: left; font-weight: 400; color: #333; margin-top: 25px; padding-left: 5px; border-left: 4px solid #8fd462; line-height: 1; }
+        h3 { text-align: left; font-weight: 400; color: #333; margin-top: 25px; padding-left: 10px; border-left: 5px solid #8fd462; line-height: 1.2; }
         .product-item { background: #fff; padding: 15px; margin-bottom: 10px; border-radius: 15px; border: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .btn-del { background: #ff6b6b; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+        .btn-del { background: #ff6b6b; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .btn-del:hover { background: #ee5253; }
     </style>
 </head>
 <body>
 
 <div class="header-banner">
+    <!-- แบนเนอร์ VECO จาก Google Drive -->
     <img src="https://lh3.googleusercontent.com/d/1g7peh4Iz0oTxrNKEzmxOgHo1RY4WoaJ2" alt="Banner">
 </div>
 
 <div class="card">
-    <!-- ส่วนแสดงโปรไฟล์แอดมิน -->
+    <!-- ส่วนข้อมูลแอดมิน (จะแสดงเมื่อล็อกอินสำเร็จ) -->
     <div class="profile-area" id="profileArea">
         <img id="profile-pic" src="" alt="Admin Profile">
-        <p id="profile-name">กำลังโหลดชื่อแอดมิน...</p>
+        <p id="profile-name">กำลังระบุตัวตน...</p>
     </div>
 
     <h1>Veco Store</h1>
     
-    <!-- A:shopName จะถูกส่งอัตโนมัติจากชื่อ LINE -->
-    <!-- H:locate -->
-    <input type="text" id="shopAddress" placeholder="ใส่ลิงก์ที่อยู่/พิกัดผู้ขาย" oninput="saveAddress()">
+    <!-- ฟอร์มกรอกข้อมูลส่งไปยัง Google Sheets -->
+    <input type="text" id="shopAddress" placeholder="ลิงก์พิกัดร้านค้า/ที่อยู่" oninput="saveAddress()">
+    <input type="text" id="itemName" placeholder="ชื่อสินค้า (เช่น ส้มสายน้ำผึ้ง)">
     
-    <!-- B:itemName -->
-    <input type="text" id="itemName" placeholder="ชื่อสินค้า (เช่น ส้ม, กุ้ง)">
-    
-    <!-- C-F: ราคาคุณภาพต่างๆ -->
-    <input type="number" id="p1" placeholder="ราคา: คุณภาพสวย">
-    <input type="number" id="p2" placeholder="ราคา: ตำหนิเล็กน้อย">
+    <input type="number" id="p1" placeholder="ราคา: เกรดสวย">
+    <input type="number" id="p2" placeholder="ราคา: มีตำหนิเล็กน้อย">
     <input type="number" id="p3" placeholder="ราคา: ตำหนิมาก">
-    <input type="number" id="p4" placeholder="ราคา: รับประทานไม่ได้">
+    <input type="number" id="p4" placeholder="ราคา: ทานไม่ได้">
     
-    <button class="btn-add" id="mainBtn" onclick="sendData('add')">เพิ่มสินค้าใหม่</button>
+    <button class="btn-add" id="mainBtn" onclick="sendData('add')">เพิ่มสินค้าเข้าชีต</button>
     
     <h3>รายการของคุณ</h3>
     <div id="product-list">
-        <p style="color: #999; font-size: 14px;">กำลังโหลดข้อมูลรายการสินค้า...</p>
+        <p style="color: #999; font-size: 14px;">กำลังดึงรายการสินค้าจากชีต...</p>
     </div>
 </div>
 
 <script>
-    // ⚠️ ต้องเติม URL จากการ Deploy Google Apps Script ตรงนี้ครับ
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyUsOBhMk9Abxc-sQ76fAgrqBUz-ru7hV_GXQiX1ms_LSa27GvzNfkgygGo43vcnYV9TQ/exec"; 
-    const MY_LIFF_ID = "2009975524-xymUHzaC"; // แก้ไขเป็นตัวพิมพ์เล็กตามวิดีโอ IMG_2961.mov
+    // ⚠️ สำคัญ: วาง URL ที่ได้จากการ Deploy Google Apps Script ใหม่ล่าสุดที่นี่
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNCZ7n_GfUQT_k7x0myft1zrEGswGbwpHm0PkjLHl4BrS-UmKW7uA8uib34CIvi330/exec"; 
+    const MY_LIFF_ID = "2009975524-xymUHzac"; // แก้ไขเป็น c เล็กตามหน้าจอ LIFF ID ของคุณกล้า
 
     let userDisplayName = "";
 
+    // บันทึกที่อยู่ไว้ในเครื่อง ไม่ต้องพิมพ์ใหม่ทุกครั้ง
     function saveAddress() {
-        localStorage.setItem("veco_address", document.getElementById("shopAddress").value);
+        localStorage.setItem("veco_address_admin", document.getElementById("shopAddress").value);
     }
 
     function loadSavedAddress() {
-        const savedAddr = localStorage.getItem("veco_address");
+        const savedAddr = localStorage.getItem("veco_address_admin");
         if (savedAddr) document.getElementById("shopAddress").value = savedAddr;
     }
 
+    // เริ่มการทำงานของ LIFF
     async function initLiff() {
         try {
             await liff.init({ liffId: MY_LIFF_ID });
@@ -95,9 +97,9 @@
                 const profile = await liff.getProfile();
                 userDisplayName = profile.displayName;
                 
-                // แสดงผลโปรไฟล์แอดมิน
+                // แสดงข้อมูลแอดมินบนหน้าการ์ด
                 document.getElementById('profile-pic').src = profile.pictureUrl;
-                document.getElementById('profile-name').innerText = "สวัสดีคุณ " + profile.displayName;
+                document.getElementById('profile-name').innerText = "แอดมิน: " + profile.displayName;
                 document.getElementById('profileArea').style.display = 'block';
 
                 loadSavedAddress();
@@ -105,10 +107,11 @@
             }
         } catch (error) { 
             console.error("LIFF Error:", error);
-            document.getElementById("product-list").innerHTML = "<p>กรุณาเปิดใน LINE</p>";
+            document.getElementById("product-list").innerHTML = "<p style='color:red;'>กรุณาเปิดผ่าน LINE (LIFF)</p>";
         }
     }
 
+    // ดึงข้อมูลจากชีตมาแสดง (คอลัมน์ A ต้องตรงกับชื่อ LINE แอดมิน)
     async function loadProducts() {
         const listDiv = document.getElementById("product-list");
         try {
@@ -116,65 +119,68 @@
             const products = await resp.json();
             
             if (!products || products.length === 0) {
-                listDiv.innerHTML = "<p style='color:#999;'>ยังไม่มีรายการสินค้าของคุณ</p>";
+                listDiv.innerHTML = "<p style='color:#999;'>ยังไม่มีรายการสินค้า</p>";
                 return;
             }
 
             let html = "";
             products.forEach(row => {
-                // คอลัมน์: 0=shopName, 1=itemName, 2=p1, 3=p2, 4=p3, 5=p4
-                if(row[0] === "shopName") return; // ข้ามหัวตาราง
+                if(row[0] === "shopName") return; // ข้ามแถวหัวตาราง
                 html += `
                     <div class="product-item">
                         <div>
                             <strong>${row[1]}</strong><br>
-                            <small>ราคา: ${row[2]} | ${row[3]} | ${row[4]} | ${row[5]}</small>
+                            <small>เกรดสวย: ${row[2]}฿ | ตำหนิ: ${row[3]}฿ / ${row[4]}฿</small>
                         </div>
                         <button class="btn-del" onclick="confirmDelete('${row[1]}')">ลบ</button>
                     </div>`;
             });
             listDiv.innerHTML = html;
-        } catch (e) { listDiv.innerHTML = "<p>ไม่สามารถดึงข้อมูลได้ (เช็ค URL ในสคริปต์)</p>"; }
+        } catch (e) { 
+            listDiv.innerHTML = "<p style='color:red;'>ไม่สามารถดึงข้อมูลได้ (ตรวจสอบ URL หรือ CORS)</p>"; 
+        }
     }
 
+    // ส่งข้อมูลไปบันทึกในชีต
     async function sendData(actionType, targetItem = null) {
         const itemName = targetItem || document.getElementById("itemName").value;
         if (!itemName) return alert("กรุณาระบุชื่อสินค้า");
 
         const btn = document.getElementById("mainBtn");
         btn.disabled = true;
-        btn.innerText = "กำลังประมวลผล...";
+        btn.innerText = "กำลังบันทึกลงชีต...";
 
         const payload = {
             action: actionType,
-            shopName: userDisplayName,
-            address: document.getElementById("shopAddress").value, // จะไปลงคอลัมน์ locate (H)
-            itemName: itemName,
-            price1: document.getElementById("p1").value || 0,
-            price2: document.getElementById("p2").value || 0,
-            price3: document.getElementById("p3").value || 0,
-            price4: document.getElementById("p4").value || 0
+            shopName: userDisplayName, // A: shopName
+            itemName: itemName,        // B: itemName
+            price1: document.getElementById("p1").value || 0, // C
+            price2: document.getElementById("p2").value || 0, // D
+            price3: document.getElementById("p3").value || 0, // E
+            price4: document.getElementById("p4").value || 0, // F
+            address: document.getElementById("shopAddress").value // H: locate
         };
 
         try {
             await fetch(SCRIPT_URL, {
                 method: "POST",
-                mode: "no-cors",
+                mode: "no-cors", // ใช้ no-cors เพื่อเลี่ยงปัญหาความปลอดภัยเบื้องต้น
                 body: JSON.stringify(payload)
             });
-            alert("บันทึกข้อมูลสำเร็จ!");
+            alert("บันทึกข้อมูลเรียบร้อย!");
             location.reload(); 
         } catch (e) { 
-            alert("ผิดพลาด!"); 
+            alert("เกิดข้อผิดพลาดในการส่งข้อมูล"); 
             btn.disabled = false;
             btn.innerText = "เพิ่มสินค้าใหม่";
         }
     }
 
     function confirmDelete(name) {
-        if(confirm(`คุณต้องการลบรายการ "${name}" ใช่หรือไม่?`)) sendData('delete', name);
+        if(confirm(`ต้องการลบรายการ "${name}" ใช่หรือไม่?`)) sendData('delete', name);
     }
 
+    // รัน LIFF ทันทีเมื่อโหลดหน้า
     initLiff();
 </script>
 </body>
