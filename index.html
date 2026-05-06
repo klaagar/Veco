@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Veco Store - Admin</title>
+    <!-- เชื่อมต่อ LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
@@ -18,7 +19,7 @@
             padding: 30px 20px; 
             border-radius: 30px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
-            margin-top: -10px; /* ปรับลดลงเพื่อไม่ให้ทับข้อความในแบนเนอร์ */
+            margin-top: -10px; 
             position: relative; 
             z-index: 10; 
             text-align: center; 
@@ -30,23 +31,24 @@
         
         .btn-add { width: 100%; padding: 15px; background-color: #8fd462; color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: 500; cursor: pointer; margin-top: 5px; transition: 0.2s; }
         .btn-add:active { background-color: #76b151; transform: scale(0.98); }
+        .btn-add:disabled { background-color: #ccc; cursor: not-allowed; }
         
         h3 { text-align: left; font-weight: 400; color: #333; margin-top: 25px; padding-left: 5px; }
         .product-item { background: #fff; padding: 15px; margin-bottom: 10px; border-radius: 15px; border: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; text-align: left; }
         .btn-del { background: #ff6b6b; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; }
+        #status-msg { font-size: 14px; color: #888; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <div class="header-banner">
-    <!-- ใส่ File ID จาก Google Drive ที่ตั้งค่าแชร์เป็นสาธารณะแล้ว -->
     <img src="https://lh3.googleusercontent.com/d/1g7peh4Iz0oTxrNKEzmxOgHo1RY4WoaJ2" alt="Banner">
 </div>
 
 <div class="card">
     <h1>Veco Store</h1>
+    <div id="status-msg">กำลังโหลดข้อมูล LINE...</div>
     
-    <!-- ช่องใส่ที่อยู่ (locate) -->
     <input type="text" id="shopAddress" placeholder="ใส่ลิงก์ที่อยู่ผู้ขาย" oninput="saveAddress()">
     
     <input type="text" id="itemName" placeholder="ชื่อสินค้า">
@@ -55,17 +57,19 @@
     <input type="number" id="p3" placeholder="ราคาคุณภาพมีตำหนิมากกินได้">
     <input type="number" id="p4" placeholder="ราคาคุณภาพรับประทานไม่ได้">
     
-    <button class="btn-add" onclick="sendData('add')">เพิ่มสินค้าใหม่</button>
+    <button id="mainBtn" class="btn-add" onclick="sendData('add')">เพิ่มสินค้าใหม่</button>
     
     <h3>รายการของคุณ</h3>
     <div id="product-list">
-        <p style="color: #999; font-size: 14px;">กำลังโหลดข้อมูล...</p>
+        <p style="color: #999; font-size: 14px;">รอสักครู่...</p>
     </div>
 </div>
 
 <script>
-    const MY_LIFF_ID = "2009975524-xymUHzaC"; 
-    const SCRIPT_URL = "ใส่_WEB_APP_URL_ล่าสุดจาก_APPS_SCRIPT_ตรงนี้"; 
+    // --- ⚠️ แก้ไขจุดนี้ ⚠️ ---
+    const MY_LIFF_ID = "2009975524-xymUHzac"; // แก้เป็น c เล็กตามหน้าจอวิดีโอ
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_hRkS_U-f8V8m-D-2X7WjS1GvP2H8S-f8v8/exec"; // วาง URL จาก Apps Script ของคุณกล้า
+    // ----------------------
 
     let userDisplayName = "";
 
@@ -86,15 +90,20 @@
             } else {
                 const profile = await liff.getProfile();
                 userDisplayName = profile.displayName;
+                document.getElementById("status-msg").innerText = "แอดมิน: " + userDisplayName;
                 loadSavedAddress();
                 loadProducts(); 
             }
-        } catch (error) { console.error(error); }
+        } catch (error) { 
+            console.error(error); 
+            document.getElementById("status-msg").innerText = "กรุณาเข้าใช้งานผ่าน LINE";
+        }
     }
 
     async function loadProducts() {
         const listDiv = document.getElementById("product-list");
         try {
+            // ดึงข้อมูลมาแสดงผล (ต้องมั่นใจว่า Apps Script รองรับ doGet)
             const response = await fetch(`${SCRIPT_URL}?shopName=${encodeURIComponent(userDisplayName)}`);
             const products = await response.json();
             
@@ -109,18 +118,24 @@
                     <div class="product-item">
                         <div>
                             <strong>${row[1]}</strong><br>
-                            <small>ราคา: ${row[2]} | ${row[3]} | ${row[4]} | ${row[5]}</small>
+                            <small>สวย: ${row[2]} | ตำหนิ: ${row[3]} | มาก: ${row[4]} | กินไม่ได้: ${row[5]}</small>
                         </div>
                         <button class="btn-del" onclick="confirmDelete('${row[1]}')">ลบ</button>
                     </div>`;
             });
             listDiv.innerHTML = html;
-        } catch (e) { listDiv.innerHTML = "<p>ไม่สามารถโหลดข้อมูลได้</p>"; }
+        } catch (e) { 
+            listDiv.innerHTML = "<p style='color:#999;'>เพิ่มสินค้าใหม่เพื่อเริ่มรายการ</p>"; 
+        }
     }
 
     async function sendData(actionType, targetItem = null) {
         const itemName = targetItem || document.getElementById("itemName").value;
         if (!itemName) return alert("กรุณาระบุชื่อสินค้า");
+
+        const btn = document.getElementById("mainBtn");
+        btn.disabled = true;
+        btn.innerText = "กำลังประมวลผล...";
 
         const data = {
             action: actionType,
@@ -137,12 +152,26 @@
             await fetch(SCRIPT_URL, {
                 method: "POST",
                 mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
             });
+            
             alert("ดำเนินการสำเร็จ!");
-            if(actionType === 'add') document.getElementById("itemName").value = "";
-            loadProducts();
-        } catch (e) { alert("เกิดข้อผิดพลาดในการเชื่อมต่อ"); }
+            if(actionType === 'add') {
+                document.getElementById("itemName").value = "";
+                document.getElementById("p1").value = "";
+                document.getElementById("p2").value = "";
+                document.getElementById("p3").value = "";
+                document.getElementById("p4").value = "";
+            }
+            // รีโหลดข้อมูลหลังทำงานเสร็จ
+            setTimeout(() => { location.reload(); }, 500);
+        } catch (e) { 
+            alert("เกิดข้อผิดพลาดในการเชื่อมต่อ"); 
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "เพิ่มสินค้าใหม่";
+        }
     }
 
     function confirmDelete(name) {
