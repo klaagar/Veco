@@ -22,6 +22,7 @@
     .btn-submit { background-color: #88d462; color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
     .btn-submit:hover { background-color: #76c051; }
     .btn-location { width: 100%; padding: 12px 15px; border: 1px solid #ffeaa7; border-radius: 12px; font-size: 16px; background: #fffef0; font-family: 'Kanit', sans-serif; cursor: pointer; text-align: left; }
+    .section-label { font-size: 13px; color: #999; margin-bottom: 5px; margin-top: 15px; }
     .product-list-section { margin-top: 30px; }
     .product-card { background: #f9f9f9; padding: 15px; margin-top: 10px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
     .product-info b { color: #333; font-size: 16px; }
@@ -43,13 +44,22 @@
 
     <div class="input-section">
 
-      <!-- ✅ เปลี่ยนจาก input เป็นปุ่มกดตำแหน่ง -->
+      <!-- ข้อมูลร้าน (จำไว้ไม่หาย) -->
+      <p class="section-label">📌 ข้อมูลร้าน (กรอกครั้งเดียว)</p>
+
       <div class="input-group">
         <button type="button" class="btn-location" id="locBtn" onclick="getLocation()">
           📍 กดเพื่อแชร์ตำแหน่งร้าน
         </button>
         <input type="hidden" id="shopLocate">
       </div>
+
+      <div class="input-group">
+        <input type="text" id="contact" placeholder="📞 LINE ID หรือเบอร์โทร" oninput="saveContact()">
+      </div>
+
+      <!-- ข้อมูลสินค้า -->
+      <p class="section-label">🛒 ข้อมูลสินค้า</p>
 
       <div class="input-group">
         <input type="text" id="itemName" placeholder="ชื่อสินค้า">
@@ -84,7 +94,7 @@
 
     let userDisplayName = "";
 
-    // ✅ ฟังก์ชันดึงตำแหน่งจาก GPS
+    // ✅ GPS
     function getLocation() {
       const btn = document.getElementById("locBtn");
       btn.innerText = "📍 กำลังดึงตำแหน่ง...";
@@ -106,11 +116,23 @@
       );
     }
 
-    function loadSavedLocate() {
-      const saved = localStorage.getItem("veco_saved_locate");
-      if (saved) {
-        document.getElementById("shopLocate").value = saved;
-        document.getElementById("locBtn").innerText = "✅ " + saved;
+    // ✅ บันทึก contact
+    function saveContact() {
+      const val = document.getElementById("contact").value;
+      localStorage.setItem("veco_saved_contact", val);
+    }
+
+    // ✅ โหลดค่าที่เซฟไว้
+    function loadSavedData() {
+      const savedLocate = localStorage.getItem("veco_saved_locate");
+      if (savedLocate) {
+        document.getElementById("shopLocate").value = savedLocate;
+        document.getElementById("locBtn").innerText = "✅ " + savedLocate;
+      }
+
+      const savedContact = localStorage.getItem("veco_saved_contact");
+      if (savedContact) {
+        document.getElementById("contact").value = savedContact;
       }
     }
 
@@ -125,7 +147,7 @@
           document.getElementById("user-display").style.display = "flex";
           document.getElementById("user-name").innerText = userDisplayName;
           document.getElementById("user-img").src = profile.pictureUrl;
-          loadSavedLocate();
+          loadSavedData();
           loadProducts();
         }
       } catch (error) {
@@ -182,7 +204,8 @@
         price2: document.getElementById("p2").value || 0,
         price3: document.getElementById("p3").value || 0,
         price4: document.getElementById("p4").value || 0,
-        shopLocate: locate
+        shopLocate: locate,
+        contact: document.getElementById("contact").value || ""
       };
 
       try {
