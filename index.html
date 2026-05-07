@@ -19,9 +19,9 @@
     .input-group { margin-bottom: 10px; }
     input { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 12px; font-size: 16px; box-sizing: border-box; outline: none; font-family: 'Kanit', sans-serif; }
     input:focus { border-color: #88d462; }
-    #shopLocate { background-color: #fffef0; border: 1px solid #ffeaa7; }
     .btn-submit { background-color: #88d462; color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
     .btn-submit:hover { background-color: #76c051; }
+    .btn-location { width: 100%; padding: 12px 15px; border: 1px solid #ffeaa7; border-radius: 12px; font-size: 16px; background: #fffef0; font-family: 'Kanit', sans-serif; cursor: pointer; text-align: left; }
     .product-list-section { margin-top: 30px; }
     .product-card { background: #f9f9f9; padding: 15px; margin-top: 10px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
     .product-info b { color: #333; font-size: 16px; }
@@ -42,9 +42,15 @@
     </div>
 
     <div class="input-section">
+
+      <!-- ✅ เปลี่ยนจาก input เป็นปุ่มกดตำแหน่ง -->
       <div class="input-group">
-        <input type="text" id="shopLocate" placeholder="ใส่ลิ้งที่อยู่" oninput="saveLocate()">
+        <button type="button" class="btn-location" id="locBtn" onclick="getLocation()">
+          📍 กดเพื่อแชร์ตำแหน่งร้าน
+        </button>
+        <input type="hidden" id="shopLocate">
       </div>
+
       <div class="input-group">
         <input type="text" id="itemName" placeholder="ชื่อสินค้า">
       </div>
@@ -78,144 +84,130 @@
 
     let userDisplayName = "";
 
-    // ✅ ฟังก์ชันแกะพิกัดจาก URL ใน browser
-    async function resolveLocation(url) {
-      if (!url) return "";
-      
-      // ถ้าไม่ใช่ลิ้งก์สั้น ให้แกะพิกัดตรงๆ เลย
-      const match = 
-        url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/) ||
-        url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/) ||
-        url.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/) ||
-        url.match(/ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
-      
-      if (match) return match[1] + "," + match[2];
-      
-      // ถ้าเป็นลิ้งก์สั้น ให้ตามผ่าน API แก้ CORS
-      if (url.includes("goo.gl") || url.includes("maps.app")) {
-        try {
-          // ใช้ allorigins เพื่อแก้ปัญหา CORS
-          const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(url);
-          const res = await fetch(proxyUrl);
-          const data = await res.json();
-          const finalUrl = data.status?.url || "";
-          
-          const m2 = 
-            finalUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/) ||
-            finalUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
-          
-          if (m2) return m2[1] + "," + m2[2];
-        } catch(e) {
-          console.log("resolve error:", e);
-        }
-      }
-      
-      return url; // ถ้าแกะไม่ได้ส่ง URL ไปตามเดิม
-    }
+    // ✅ ฟังก์ชันดึงตำแหน่งจาก GPS
+    function getLocation() {
+      const btn = document.getElementById("locBtn");
+      btn.innerText = "📍 กำลังดึงตำแหน่ง...";
+      btn.disabled = true;
 
-    function saveLocate() {
-        const val = document.getElementById("shopLocate").value;
-        localStorage.setItem("veco_saved_locate", val);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const latlng = pos.coords.latitude + "," + pos.coords.longitude;
+          document.getElementById("shopLocate").value = latlng;
+          btn.innerText = "✅ " + latlng;
+          btn.disabled = false;
+          localStorage.setItem("veco_saved_locate", latlng);
+        },
+        (err) => {
+          btn.innerText = "❌ ไม่สามารถดึงตำแหน่งได้ กรุณาอนุญาต";
+          btn.disabled = false;
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
     }
 
     function loadSavedLocate() {
-        const saved = localStorage.getItem("veco_saved_locate");
-        if (saved) document.getElementById("shopLocate").value = saved;
+      const saved = localStorage.getItem("veco_saved_locate");
+      if (saved) {
+        document.getElementById("shopLocate").value = saved;
+        document.getElementById("locBtn").innerText = "✅ " + saved;
+      }
     }
 
     async function initLiff() {
-        try {
-            await liff.init({ liffId: MY_LIFF_ID });
-            if (!liff.isLoggedIn()) {
-                liff.login();
-            } else {
-                const profile = await liff.getProfile();
-                userDisplayName = profile.displayName;
-                document.getElementById("user-display").style.display = "flex";
-                document.getElementById("user-name").innerText = userDisplayName;
-                document.getElementById("user-img").src = profile.pictureUrl;
-                loadSavedLocate();
-                loadProducts();
-            }
-        } catch (error) {
-            console.error("LIFF Error:", error);
+      try {
+        await liff.init({ liffId: MY_LIFF_ID });
+        if (!liff.isLoggedIn()) {
+          liff.login();
+        } else {
+          const profile = await liff.getProfile();
+          userDisplayName = profile.displayName;
+          document.getElementById("user-display").style.display = "flex";
+          document.getElementById("user-name").innerText = userDisplayName;
+          document.getElementById("user-img").src = profile.pictureUrl;
+          loadSavedLocate();
+          loadProducts();
         }
+      } catch (error) {
+        console.error("LIFF Error:", error);
+      }
     }
 
     async function loadProducts() {
-        const listDiv = document.getElementById("product-list");
-        try {
-            const response = await fetch(`${SCRIPT_URL}?shopName=${encodeURIComponent(userDisplayName)}`);
-            const products = await response.json();
-            let html = "";
-            if (!products || products.length === 0) {
-                html = "<p style='text-align:center; color:#999;'>ยังไม่มีรายการสินค้า</p>";
-            } else {
-                products.forEach(row => {
-                    html += `
-                        <div class="product-card">
-                            <div class="product-info">
-                                <b>${row[1]}</b><br>
-                                <small>สวย: ${row[2]} | มีตำหนิ: ${row[3]}</small>
-                            </div>
-                            <button class="btn-del" onclick="confirmDelete('${row[1]}')">ลบ</button>
-                        </div>`;
-                });
-            }
-            listDiv.innerHTML = html;
-        } catch (e) {
-            listDiv.innerHTML = "<p style='text-align:center;'>ไม่สามารถโหลดข้อมูลได้</p>";
+      const listDiv = document.getElementById("product-list");
+      try {
+        const response = await fetch(`${SCRIPT_URL}?shopName=${encodeURIComponent(userDisplayName)}`);
+        const products = await response.json();
+        let html = "";
+        if (!products || products.length === 0) {
+          html = "<p style='text-align:center; color:#999;'>ยังไม่มีรายการสินค้า</p>";
+        } else {
+          products.forEach(row => {
+            html += `
+              <div class="product-card">
+                <div class="product-info">
+                  <b>${row[1]}</b><br>
+                  <small>สวย: ${row[2]} | มีตำหนิ: ${row[3]}</small>
+                </div>
+                <button class="btn-del" onclick="confirmDelete('${row[1]}')">ลบ</button>
+              </div>`;
+          });
         }
+        listDiv.innerHTML = html;
+      } catch (e) {
+        listDiv.innerHTML = "<p style='text-align:center;'>ไม่สามารถโหลดข้อมูลได้</p>";
+      }
     }
 
     async function sendData(actionType, targetItem = null) {
-        const itemName = targetItem || document.getElementById("itemName").value;
-        if (!itemName) return alert("กรุณาระบุชื่อสินค้า");
+      const itemName = targetItem || document.getElementById("itemName").value;
+      if (!itemName) return alert("กรุณาระบุชื่อสินค้า");
 
-        const btn = document.getElementById("mainBtn");
+      const locate = document.getElementById("shopLocate").value || "";
+      if (actionType === 'insert' && !locate) {
+        return alert("กรุณากดแชร์ตำแหน่งร้านก่อนครับ");
+      }
+
+      const btn = document.getElementById("mainBtn");
+      if (actionType === 'insert') {
+        btn.innerText = "กำลังบันทึก...";
+        btn.disabled = true;
+      }
+
+      const data = {
+        action: actionType,
+        shopName: userDisplayName,
+        itemName: itemName,
+        price1: document.getElementById("p1").value || 0,
+        price2: document.getElementById("p2").value || 0,
+        price3: document.getElementById("p3").value || 0,
+        price4: document.getElementById("p4").value || 0,
+        shopLocate: locate
+      };
+
+      try {
+        await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(data) });
+        alert("ดำเนินการสำเร็จ!");
         if (actionType === 'insert') {
-            btn.innerText = "กำลังบันทึก...";
-            btn.disabled = true;
+          document.getElementById("itemName").value = "";
+          document.getElementById("p1").value = "";
+          document.getElementById("p2").value = "";
+          document.getElementById("p3").value = "";
+          document.getElementById("p4").value = "";
         }
-
-        // ✅ แกะพิกัดก่อนส่ง
-        const rawLocate = document.getElementById("shopLocate").value || "";
-        const cleanLocate = actionType === 'insert' ? await resolveLocation(rawLocate) : rawLocate;
-
-        const data = {
-            action: actionType,
-            shopName: userDisplayName,
-            itemName: itemName,
-            price1: document.getElementById("p1").value || 0,
-            price2: document.getElementById("p2").value || 0,
-            price3: document.getElementById("p3").value || 0,
-            price4: document.getElementById("p4").value || 0,
-            shopLocate: cleanLocate
-        };
-
-        try {
-            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(data) });
-            alert("ดำเนินการสำเร็จ!");
-            if (actionType === 'insert') {
-                document.getElementById("itemName").value = "";
-                document.getElementById("p1").value = "";
-                document.getElementById("p2").value = "";
-                document.getElementById("p3").value = "";
-                document.getElementById("p4").value = "";
-            }
-            loadProducts();
-        } catch (e) {
-            loadProducts();
-        } finally {
-            btn.innerText = "➕ เพิ่มสินค้าใหม่";
-            btn.disabled = false;
-        }
+        loadProducts();
+      } catch (e) {
+        loadProducts();
+      } finally {
+        btn.innerText = "➕ เพิ่มสินค้าใหม่";
+        btn.disabled = false;
+      }
     }
 
     function confirmDelete(name) {
-        if (confirm(`คุณต้องการลบรายการ "${name}" ใช่หรือไม่?`)) {
-            sendData('delete', name);
-        }
+      if (confirm(`คุณต้องการลบรายการ "${name}" ใช่หรือไม่?`)) {
+        sendData('delete', name);
+      }
     }
 
     initLiff();
