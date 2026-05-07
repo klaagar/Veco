@@ -44,7 +44,6 @@
 
     <div class="input-section">
 
-      <!-- ข้อมูลร้าน (จำไว้ไม่หาย) -->
       <p class="section-label">📌 ข้อมูลร้าน (กรอกครั้งเดียว)</p>
 
       <div class="input-group">
@@ -58,7 +57,6 @@
         <input type="text" id="contact" placeholder="📞 LINE ID หรือเบอร์โทร" oninput="saveContact()">
       </div>
 
-      <!-- ข้อมูลสินค้า -->
       <p class="section-label">🛒 ข้อมูลสินค้า</p>
 
       <div class="input-group">
@@ -93,8 +91,8 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzoWuD1R5dM0oZieq7pSSMzEERjy0oqiKSe0rMS8nIDQTXLP1qBfQD_rkZ_m7PQHPAHEg/exec"; 
 
     let userDisplayName = "";
+    let lineUserId = "";
 
-    // ✅ GPS
     function getLocation() {
       const btn = document.getElementById("locBtn");
       btn.innerText = "📍 กำลังดึงตำแหน่ง...";
@@ -116,13 +114,11 @@
       );
     }
 
-    // ✅ บันทึก contact
     function saveContact() {
       const val = document.getElementById("contact").value;
       localStorage.setItem("veco_saved_contact", val);
     }
 
-    // ✅ โหลดค่าที่เซฟไว้
     function loadSavedData() {
       const savedLocate = localStorage.getItem("veco_saved_locate");
       if (savedLocate) {
@@ -144,6 +140,7 @@
         } else {
           const profile = await liff.getProfile();
           userDisplayName = profile.displayName;
+          lineUserId = profile.userId;
           document.getElementById("user-display").style.display = "flex";
           document.getElementById("user-name").innerText = userDisplayName;
           document.getElementById("user-img").src = profile.pictureUrl;
@@ -205,7 +202,8 @@
         price3: document.getElementById("p3").value || 0,
         price4: document.getElementById("p4").value || 0,
         shopLocate: locate,
-        contact: document.getElementById("contact").value || ""
+        contact: document.getElementById("contact").value || "",
+        lineUserId: lineUserId
       };
 
       try {
