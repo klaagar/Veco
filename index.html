@@ -21,12 +21,30 @@
     input:focus { border-color: #88d462; }
     .btn-submit { background-color: #88d462; color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
     .btn-submit:hover { background-color: #76c051; }
+    .btn-submit.processed { background-color: #e65100; }
+    .btn-submit.processed:hover { background-color: #bf360c; }
     .btn-location { width: 100%; padding: 12px 15px; border: 1px solid #ffeaa7; border-radius: 12px; font-size: 16px; background: #fffef0; font-family: 'Kanit', sans-serif; cursor: pointer; text-align: left; }
     .section-label { font-size: 13px; color: #999; margin-bottom: 5px; margin-top: 15px; }
+
+    /* Tab */
+    .tab-bar { display: flex; background: #f0f0f0; border-radius: 12px; padding: 4px; margin-bottom: 15px; }
+    .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 10px; font-family: 'Kanit', sans-serif; font-size: 15px; cursor: pointer; color: #999; transition: 0.2s; }
+    .tab-btn.active { background: white; color: #333; font-weight: bold; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .tab-btn.active.fresh { color: #1a6b1a; }
+    .tab-btn.active.processed { color: #e65100; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Product list */
     .product-list-section { margin-top: 30px; }
     .product-card { background: #f9f9f9; padding: 15px; margin-top: 10px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
+    .product-card.processed-card { border-left: 3px solid #e65100; }
+    .product-card.fresh-card { border-left: 3px solid #88d462; }
     .product-info b { color: #333; font-size: 16px; }
     .product-info small { color: #777; }
+    .product-type { font-size: 10px; padding: 2px 8px; border-radius: 10px; display: inline-block; margin-bottom: 3px; }
+    .product-type.fresh { background: #e8f5e9; color: #1a6b1a; }
+    .product-type.processed { background: #fbe9e7; color: #e65100; }
     .btn-del { background: #e74c3c; color: white; padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer; font-size: 12px; }
   </style>
 </head>
@@ -42,28 +60,32 @@
         <span id="user-name">กำลังโหลด...</span>
     </div>
 
-    <div class="input-section">
+    <!-- ข้อมูลร้าน -->
+    <p class="section-label">📌 ข้อมูลร้าน (กรอกครั้งเดียว)</p>
+    <div class="input-group">
+      <button type="button" class="btn-location" id="locBtn" onclick="getLocation()">
+        📍 กดเพื่อแชร์ตำแหน่งร้าน
+      </button>
+      <input type="hidden" id="shopLocate">
+    </div>
+    <div class="input-group">
+      <input type="text" id="contact" placeholder="📞 LINE ID หรือเบอร์โทร" oninput="saveContact()">
+    </div>
 
-      <p class="section-label">📌 ข้อมูลร้าน (กรอกครั้งเดียว)</p>
+    <!-- Tab สินค้า -->
+    <p class="section-label">🛒 เพิ่มสินค้า</p>
+    <div class="tab-bar">
+      <button class="tab-btn active fresh" onclick="switchTab('fresh')">🍊 ขายสด</button>
+      <button class="tab-btn processed" onclick="switchTab('processed')">🧃 แปรรูป</button>
+    </div>
 
+    <!-- Tab ขายสด -->
+    <div id="tab-fresh" class="tab-content active">
       <div class="input-group">
-        <button type="button" class="btn-location" id="locBtn" onclick="getLocation()">
-          📍 กดเพื่อแชร์ตำแหน่งร้าน
-        </button>
-        <input type="hidden" id="shopLocate">
+        <input type="text" id="freshName" placeholder="ชื่อสินค้า เช่น ส้ม กล้วย">
       </div>
-
       <div class="input-group">
-        <input type="text" id="contact" placeholder="📞 LINE ID หรือเบอร์โทร" oninput="saveContact()">
-      </div>
-
-      <p class="section-label">🛒 ข้อมูลสินค้า</p>
-
-      <div class="input-group">
-        <input type="text" id="itemName" placeholder="ชื่อสินค้า">
-      </div>
-      <div class="input-group">
-        <input type="number" id="p1" placeholder="ราคาคุณภาพสวย">
+        <input type="number" id="p1" placeholder="ราคาคุณภาพสวย (บาท/กก.)">
       </div>
       <div class="input-group">
         <input type="number" id="p2" placeholder="ราคาคุณภาพมีตำหนิเล็กน้อย">
@@ -74,14 +96,25 @@
       <div class="input-group">
         <input type="number" id="p4" placeholder="ราคาคุณภาพรับประทานไม่ได้">
       </div>
-
-      <button class="btn-submit" id="mainBtn" onclick="sendData('insert')">➕ เพิ่มสินค้าใหม่</button>
+      <button class="btn-submit fresh" id="freshBtn" onclick="sendFresh()">➕ เพิ่มสินค้าขายสด</button>
     </div>
 
+    <!-- Tab แปรรูป -->
+    <div id="tab-processed" class="tab-content">
+      <div class="input-group">
+        <input type="text" id="processedName" placeholder="ชื่อสินค้า เช่น น้ำส้มคั้น ส้มกวน">
+      </div>
+      <div class="input-group">
+        <input type="number" id="pp1" placeholder="ราคารับซื้อ (บาท/กก.)">
+      </div>
+      <button class="btn-submit processed" id="processedBtn" onclick="sendProcessed()">➕ เพิ่มสินค้าแปรรูป</button>
+    </div>
+
+    <!-- รายการสินค้า -->
     <div class="product-list-section">
       <h3>📦 รายการของคุณ</h3>
       <div id="product-list">
-          <p style="text-align:center; color:#999;">กำลังโหลดรายการ...</p>
+        <p style="text-align:center; color:#999;">กำลังโหลดรายการ...</p>
       </div>
     </div>
   </div>
@@ -93,11 +126,22 @@
     let userDisplayName = "";
     let lineUserId = "";
 
+    // ---- Tab ----
+    function switchTab(tab) {
+      document.getElementById("tab-fresh").classList.toggle("active", tab === "fresh");
+      document.getElementById("tab-processed").classList.toggle("active", tab === "processed");
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.classList.remove("active");
+      });
+      const activeBtn = document.querySelector(`.tab-btn.${tab}`);
+      if (activeBtn) activeBtn.classList.add("active");
+    }
+
+    // ---- GPS ----
     function getLocation() {
       const btn = document.getElementById("locBtn");
       btn.innerText = "📍 กำลังดึงตำแหน่ง...";
       btn.disabled = true;
-
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const latlng = pos.coords.latitude + "," + pos.coords.longitude;
@@ -106,7 +150,7 @@
           btn.disabled = false;
           localStorage.setItem("veco_saved_locate", latlng);
         },
-        (err) => {
+        () => {
           btn.innerText = "❌ ไม่สามารถดึงตำแหน่งได้ กรุณาอนุญาต";
           btn.disabled = false;
         },
@@ -115,8 +159,7 @@
     }
 
     function saveContact() {
-      const val = document.getElementById("contact").value;
-      localStorage.setItem("veco_saved_contact", val);
+      localStorage.setItem("veco_saved_contact", document.getElementById("contact").value);
     }
 
     function loadSavedData() {
@@ -125,13 +168,11 @@
         document.getElementById("shopLocate").value = savedLocate;
         document.getElementById("locBtn").innerText = "✅ " + savedLocate;
       }
-
       const savedContact = localStorage.getItem("veco_saved_contact");
-      if (savedContact) {
-        document.getElementById("contact").value = savedContact;
-      }
+      if (savedContact) document.getElementById("contact").value = savedContact;
     }
 
+    // ---- LIFF ----
     async function initLiff() {
       try {
         await liff.init({ liffId: MY_LIFF_ID });
@@ -152,6 +193,12 @@
       }
     }
 
+    // ---- โหลดรายการ ----
+    function isProcessedItem(itemName) {
+      const words = ["น้ำ", "กวน", "แยม", "อบแห้ง", "ดอง", "แช่อิ่ม", "ทอด", "คั้น", "ฝอย", "แปรรูป"];
+      return words.some(w => itemName.includes(w));
+    }
+
     async function loadProducts() {
       const listDiv = document.getElementById("product-list");
       try {
@@ -162,13 +209,22 @@
           html = "<p style='text-align:center; color:#999;'>ยังไม่มีรายการสินค้า</p>";
         } else {
           products.forEach(row => {
+            const name = row[1] || "";
+            const isProcessed = isProcessedItem(name);
+            const typeLabel = isProcessed
+              ? `<span class="product-type processed">แปรรูป</span>`
+              : `<span class="product-type fresh">ขายสด</span>`;
+            const priceInfo = isProcessed
+              ? `ราคา: ${row[2]} บาท/กก.`
+              : `สวย: ${row[2]} | มีตำหนิ: ${row[3]}`;
             html += `
-              <div class="product-card">
+              <div class="product-card ${isProcessed ? 'processed-card' : 'fresh-card'}">
                 <div class="product-info">
-                  <b>${row[1]}</b><br>
-                  <small>สวย: ${row[2]} | มีตำหนิ: ${row[3]}</small>
+                  ${typeLabel}
+                  <b>${name}</b><br>
+                  <small>${priceInfo}</small>
                 </div>
-                <button class="btn-del" onclick="confirmDelete('${row[1]}')">ลบ</button>
+                <button class="btn-del" onclick="confirmDelete('${name}')">ลบ</button>
               </div>`;
           });
         }
@@ -178,23 +234,19 @@
       }
     }
 
-    async function sendData(actionType, targetItem = null) {
-      const itemName = targetItem || document.getElementById("itemName").value;
+    // ---- เพิ่มสินค้าขายสด ----
+    async function sendFresh() {
+      const itemName = document.getElementById("freshName").value.trim();
       if (!itemName) return alert("กรุณาระบุชื่อสินค้า");
-
       const locate = document.getElementById("shopLocate").value || "";
-      if (actionType === 'insert' && !locate) {
-        return alert("กรุณากดแชร์ตำแหน่งร้านก่อนครับ");
-      }
+      if (!locate) return alert("กรุณากดแชร์ตำแหน่งร้านก่อนครับ");
 
-      const btn = document.getElementById("mainBtn");
-      if (actionType === 'insert') {
-        btn.innerText = "กำลังบันทึก...";
-        btn.disabled = true;
-      }
+      const btn = document.getElementById("freshBtn");
+      btn.innerText = "กำลังบันทึก...";
+      btn.disabled = true;
 
       const data = {
-        action: actionType,
+        action: "insert",
         shopName: userDisplayName,
         itemName: itemName,
         price1: document.getElementById("p1").value || 0,
@@ -208,27 +260,73 @@
 
       try {
         await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(data) });
-        alert("ดำเนินการสำเร็จ!");
-        if (actionType === 'insert') {
-          document.getElementById("itemName").value = "";
-          document.getElementById("p1").value = "";
-          document.getElementById("p2").value = "";
-          document.getElementById("p3").value = "";
-          document.getElementById("p4").value = "";
-        }
+        alert("เพิ่มสินค้าขายสดสำเร็จ!");
+        document.getElementById("freshName").value = "";
+        document.getElementById("p1").value = "";
+        document.getElementById("p2").value = "";
+        document.getElementById("p3").value = "";
+        document.getElementById("p4").value = "";
         loadProducts();
       } catch (e) {
         loadProducts();
       } finally {
-        btn.innerText = "➕ เพิ่มสินค้าใหม่";
+        btn.innerText = "➕ เพิ่มสินค้าขายสด";
         btn.disabled = false;
       }
     }
 
-    function confirmDelete(name) {
-      if (confirm(`คุณต้องการลบรายการ "${name}" ใช่หรือไม่?`)) {
-        sendData('delete', name);
+    // ---- เพิ่มสินค้าแปรรูป ----
+    async function sendProcessed() {
+      const itemName = document.getElementById("processedName").value.trim();
+      if (!itemName) return alert("กรุณาระบุชื่อสินค้า");
+      const locate = document.getElementById("shopLocate").value || "";
+      if (!locate) return alert("กรุณากดแชร์ตำแหน่งร้านก่อนครับ");
+      const price = document.getElementById("pp1").value || 0;
+
+      const btn = document.getElementById("processedBtn");
+      btn.innerText = "กำลังบันทึก...";
+      btn.disabled = true;
+
+      // แปรรูปใส่ราคาเดียว ช่อง price1 ที่เหลือ 0
+      const data = {
+        action: "insert",
+        shopName: userDisplayName,
+        itemName: itemName,
+        price1: price,
+        price2: price,
+        price3: price,
+        price4: price,
+        shopLocate: locate,
+        contact: document.getElementById("contact").value || "",
+        lineUserId: lineUserId
+      };
+
+      try {
+        await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(data) });
+        alert("เพิ่มสินค้าแปรรูปสำเร็จ!");
+        document.getElementById("processedName").value = "";
+        document.getElementById("pp1").value = "";
+        loadProducts();
+      } catch (e) {
+        loadProducts();
+      } finally {
+        btn.innerText = "➕ เพิ่มสินค้าแปรรูป";
+        btn.disabled = false;
       }
+    }
+
+    // ---- ลบสินค้า ----
+    async function confirmDelete(name) {
+      if (!confirm(`คุณต้องการลบรายการ "${name}" ใช่หรือไม่?`)) return;
+      await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "delete",
+          shopName: userDisplayName,
+          itemName: name
+        })
+      });
+      loadProducts();
     }
 
     initLiff();
